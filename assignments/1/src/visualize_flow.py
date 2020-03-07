@@ -128,5 +128,5 @@ def visualize_flow(src, flow_comp_func):
 
 ### TEST ###
 if __name__ == '__main__':
-    visualize_flow('../data/chaplin.mp4', lambda im1, im2: lucas_kanade(im1, im2, n=3))
+    visualize_flow('../data/chaplin.mp4', lambda im1, im2: lucas_kanade(im1, im2, n=2))
 

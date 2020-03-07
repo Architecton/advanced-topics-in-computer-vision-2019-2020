@@ -32,24 +32,20 @@ def lucas_kanade(im1, im2, n):
     sum_xy = cv2.filter2D(im_df_dx*im_df_dy, ddepth=-1, kernel=sum_ker)
     sum_xt = cv2.filter2D(im_df_dx*im_df_dt, ddepth=-1, kernel=sum_ker)
     sum_yt = cv2.filter2D(im_df_dy*im_df_dt, ddepth=-1, kernel=sum_ker)
-    
+
     # Compute determinant of the A matrix.
     det = sum_x_squared*sum_y_squared - sum_xy*sum_xy
 
     # Set minimum determinant value and get indices of pixels where
     # determinant above set threshold.
-    # DET_THRESH = 0.1
-    # det_idx = np.abs(det) > DET_THRESH
+    DET_THRESH = 1e-4
+    det_idx = np.abs(det) > DET_THRESH
     
     # Compute the approximated changes in spatial coordinates.
-
-    # u = np.zeros(im1.shape, dtype=float)
-    # v = np.zeros(im2.shape, dtype=float)
-    # u[det_idx] = -(sum_y_squared * sum_xt - sum_xy * sum_yt)[det_idx]/(det[det_idx])
-    # v[det_idx] = -(sum_x_squared * sum_yt - sum_xy * sum_xt)[det_idx]/(det[det_idx])
-
-    u = -(sum_y_squared * sum_xt - sum_xy * sum_yt)/(det)
-    v = -(sum_x_squared * sum_yt - sum_xy * sum_xt)/(det)
+    u = np.zeros(im1.shape, dtype=float)
+    v = np.zeros(im2.shape, dtype=float)
+    u[det_idx] = -(sum_y_squared * sum_xt - sum_xy * sum_yt)[det_idx]/(det[det_idx])
+    v[det_idx] = -(sum_x_squared * sum_yt - sum_xy * sum_xt)[det_idx]/(det[det_idx])
     
     # Return approximated changes in spatial coordinates as
     # a tuple of numpy arrays (matrices).

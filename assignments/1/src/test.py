@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ex1_utils import rotate_image, show_flow
 from lucas_kanade import lucas_kanade
+from iterative_lucas_kanade import iterative_lucas_kanade
 
 import pdb
 pdb.set_trace()
@@ -10,6 +11,7 @@ im1 = np.random.rand(200, 200 ).astype(np.float32)
 im2 = im1.copy()
 im2 = rotate_image(im2, -1)
 U_lk, V_lk = lucas_kanade(im1, im2, 3)
+# U_lk, V_lk = iterative_lucas_kanade(im1, im2, 3)
 
 # U_hs, V_hs = horn_schunck(im1, im2 ,1000, 0.5)
 fig1, ((ax1_11, ax1_12), (ax1_21, ax1_22)) = plt.subplots(2, 2)
