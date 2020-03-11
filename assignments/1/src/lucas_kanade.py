@@ -1,8 +1,8 @@
 import numpy as np
-from ex1_utils import gaussderiv
+from ex1_utils import gaussderiv, gausssmooth
 import cv2
 
-def lucas_kanade(im1, im2, n):
+def lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False, sigma2=0.15):
     """
     Compute the Lucas-Kanade optical flow estimation.
     Author: Jernej Vivod (vivod.jernej@gmail.com)
@@ -11,6 +11,12 @@ def lucas_kanade(im1, im2, n):
         im1 (np.ndarray): First frame.
         im2 (np.ndarray): First frame.
         n (int): Size of neighborhood to use in computations.
+        sigma1 (float): Standard deviation of the Gaussian smoothing filter used in computing
+        the spatial derivatives.
+        derivative_smoothing (bool): Boolean flag indicating whether to use smoothing of spatial and the
+        temporal derivative.
+        sigma2 (float): Standard deviation of the Gaussian smoothing filter used in smoothing
+        the temporal derivative.
 
     Returns:
         (tuple): tuple of matrices of changes in spatial
@@ -18,10 +24,22 @@ def lucas_kanade(im1, im2, n):
     """
 
     # Smooth and compute derivatives of first image.
-    im_df_dx, im_df_dy = gaussderiv(im2, sigma=1.0)
+    im_df_dx_t1, im_df_dy_t1 = gaussderiv(im1, sigma=sigma1)
 
     # Compute temporal derivative
     im_df_dt = im2 - im1
+    
+    # If option to smooth derivatives selected, average the spatial
+    # derivatives and smooth the temporal derivative using a gaussian.
+    if derivative_smoothing:
+        im_df_dx_t2, im_df_dy_t2 = gaussderiv(im2, sigma=sigma1)
+        im_df_dx = 0.5*(im_df_dx_t1 + im_df_dx_t2)
+        im_df_dy = 0.5*(im_df_dy_t1 + im_df_dy_t2)
+        im_df_dt = gausssmooth(im_df_dt, sigma2)
+    else:
+        im_df_dx = im_df_dx_t1
+        im_df_dy = im_df_dy_t1
+
     
     # Initialize kernel for computing the neighborhood sums.
     sum_ker = np.ones((n, n), dtype=float)
@@ -38,7 +56,7 @@ def lucas_kanade(im1, im2, n):
 
     # Set minimum determinant value and get indices of pixels where
     # determinant above set threshold.
-    DET_THRESH = 1e-4
+    DET_THRESH = 0.0 # 1e-4
     det_idx = np.abs(det) > DET_THRESH
     
     # Compute the approximated changes in spatial coordinates.
