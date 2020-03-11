@@ -45,14 +45,14 @@ def lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False, sigma2=0
     sum_ker = np.ones((n, n), dtype=float)
 
     # Compute required neighborhood sums.
-    sum_x_squared = cv2.filter2D(np.power(im_df_dx, 2), ddepth=-1, kernel=sum_ker) #
-    sum_y_squared = cv2.filter2D(np.power(im_df_dy, 2), ddepth=-1, kernel=sum_ker) #
+    sum_x_squared = cv2.filter2D(np.square(im_df_dx), ddepth=-1, kernel=sum_ker)
+    sum_y_squared = cv2.filter2D(np.square(im_df_dy), ddepth=-1, kernel=sum_ker)
     sum_xy = cv2.filter2D(im_df_dx*im_df_dy, ddepth=-1, kernel=sum_ker)
     sum_xt = cv2.filter2D(im_df_dx*im_df_dt, ddepth=-1, kernel=sum_ker)
     sum_yt = cv2.filter2D(im_df_dy*im_df_dt, ddepth=-1, kernel=sum_ker)
 
     # Compute determinant of the A matrix.
-    det = sum_x_squared*sum_y_squared - sum_xy*sum_xy
+    det = sum_x_squared*sum_y_squared - np.square(sum_xy)
 
     # Set minimum determinant value and get indices of pixels where
     # determinant above set threshold.
