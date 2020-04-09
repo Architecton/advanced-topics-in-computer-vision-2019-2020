@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from ex1_utils import gaussderiv, gausssmooth
 
-def horn_schunck(im1, im2, n_iters, lmbd, sigma1=1.0, u_init=None, v_init=None, derivative_smoothing=False, sigma2=0.15):
+def horn_schunck(im1, im2, n_iters, conv=False, lmbd=0.5, sigma1=1.0, u_init=None, v_init=None, derivative_smoothing=False, sigma2=1.0):
     """
     Compute the Horn-Schunck optical flow estimation.
     Author: Jernej Vivod (vivod.jernej@gmail.com)
@@ -11,6 +11,7 @@ def horn_schunck(im1, im2, n_iters, lmbd, sigma1=1.0, u_init=None, v_init=None, 
         im1 (np.ndarray): First frame.
         im2 (np.ndarray): First frame.
         n_iters (int): Number of iterations to perform.
+        conv (bool): Flag specifying whether to use convergence criterion to stop iteration or not.
         sigma1 (float): Standard deviation of the Gaussian smoothing filter used in computing
         the spatial derivatives.
         u_init (numpy.ndarray): Initialization for the u array.
@@ -47,13 +48,20 @@ def horn_schunck(im1, im2, n_iters, lmbd, sigma1=1.0, u_init=None, v_init=None, 
         im_df_dx_t2, im_df_dy_t2 = gaussderiv(im2, sigma=sigma1)
         im_df_dx = 0.5*(im_df_dx_t1 + im_df_dx_t2)
         im_df_dy = 0.5*(im_df_dy_t1 + im_df_dy_t2)
-        im_df_dt = gausssmooth(im_df_dt, sigma2)
+        im_df_dt = gausssmooth(im2, sigma2) - gausssmooth(im1, sigma2)
     else:
         im_df_dx = im_df_dx_t1
         im_df_dy = im_df_dy_t1
     
     # Define residual Laplacian kernel.
     res_lap = np.array([[0, 1/4, 0], [1/4, 0, 1/4], [0, 1/4, 0]])
+    
+    # u and v matrices for previous iteration (used to check for convergence).
+    u_prev = u
+    v_prev = v
+
+    # Convergence criterion.
+    CONV_THRESH = 1.0e-1
 
     # Iteratively perform Horn-Schunck method.
     for iter_count in np.arange(n_iters):
@@ -66,6 +74,15 @@ def horn_schunck(im1, im2, n_iters, lmbd, sigma1=1.0, u_init=None, v_init=None, 
         p = (im_df_dx*u_a + im_df_dy*v_a + im_df_dt)/(im_df_dx**2 + im_df_dy**2 + lmbd)
         u = u_a - im_df_dx*p
         v = v_a - im_df_dy*p
+        
+        # If using convergence criterion, check for convergence.
+        if conv:
+            if np.trace(np.matmul(u - u_prev, (u - u_prev).T)) < CONV_THRESH and np.trace(np.matmul(v - v_prev, (v - v_prev).T)) < CONV_THRESH:
+                break
+
+        # Set new previous u and v values.
+        u_prev = u
+        v_prev = v
 
 
     # Return approximated changes in spatial coordinates as

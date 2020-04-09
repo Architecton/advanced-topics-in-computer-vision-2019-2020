@@ -3,6 +3,7 @@ from timeit import default_timer as timer
 
 from ex1_utils import rotate_image
 from lucas_kanade import lucas_kanade
+from horn_schunck import horn_schunck
 
 
 def measure_runtime(im1, im2, flow_comp_func, num_repetitions):
@@ -53,9 +54,16 @@ if __name__ == '__main__':
     # Set number of repetitions for the evaluation.
     NUM_REPETITIONS = 100
     
-    # Initialize Lucas-Kanade method implementation and measure runtime.
-    flow_comp_func1 = lambda im1, im2: lucas_kanade(im1, im2, n=3)
+    # Initialize optical flow estimation methods and measure runtime.
+    flow_comp_func1 = lambda im1, im2: lucas_kanade(im1, im2, n=3, derivative_smoothing=True)
+    flow_comp_func2 = lambda im1, im2: horn_schunck(im1, im2, n_iters=1000, conv=False, lmbd=0.5, derivative_smoothing=True)
+    flow_comp_func3 = lambda im1, im2: horn_schunck(im1, im2, n_iters=1000, conv=True, lmbd=0.5, derivative_smoothing=True)
     res1 = measure_runtime(im1, im2, flow_comp_func1, NUM_REPETITIONS)
+    res2 = measure_runtime(im1, im2, flow_comp_func2, NUM_REPETITIONS)
+    res3 = measure_runtime(im1, im2, flow_comp_func3, NUM_REPETITIONS)
+
     print("Average runtime for Lucas-Kanade ({0} repetitions): {1}s".format(NUM_REPETITIONS, res1))
+    print("Average runtime for Horn-Schunck (no convergence criterion) ({0} repetitions): {1}s".format(NUM_REPETITIONS, res2))
+    print("Average runtime for Horn-Schunck (convergence criterion) ({0} repetitions): {1}s".format(NUM_REPETITIONS, res3))
     
 

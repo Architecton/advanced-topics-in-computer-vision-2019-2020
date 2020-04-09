@@ -5,29 +5,6 @@ from gaussian_pyramid import gaussian_pyramid
 from lucas_kanade import lucas_kanade
 
 
-# def warp_image(im, u, v):
-#     """
-#     Warp image using computed optical flow.
-# 
-#     Args:
-#         im (numpy.ndarray): Image to warp.
-#         u (numpy.ndarray): Computed optical flow values for the x direction.
-#         v (numpy.ndarray): Computed optical flow values for the y direction.
-# 
-#     Returns:
-#        (numpy.ndarray): Warped image. 
-#     """
-# 
-#     # Allocate matrix for warped image.
-#     res = np.zeros(im.shape, dtype=im.dtype)
-# 
-#     # Go over pixels in original image and map to new locations.
-#     for idx1 in np.arange(im.shape[0]):
-#         for idx2 in np.arange(im.shape[1]):
-#             res[min(max(idx1 + int(round(v[idx1, idx2])), 0), res.shape[0]-1), min(max(idx2 + int(round(u[idx1, idx2])), 0), res.shape[1]-1)] = im[idx1, idx2]
-#     
-#     return res
-
 def warp_image(im, u, v):
     """
     Warp image using computed optical flow.
@@ -40,6 +17,9 @@ def warp_image(im, u, v):
     Returns:
        (numpy.ndarray): Warped image. 
     """
+
+    # import pdb
+    # pdb.set_trace()
     
     # Put flow field in required format.
     flow = np.stack((-u, -v), axis=2).astype(np.float32)
@@ -51,7 +31,7 @@ def warp_image(im, u, v):
     return res
 
 
-def iterative_lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False, sigma2=0.15):
+def iterative_lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False, sigma2=1.0):
     """
     Compute iterative Lucas-Kanade algorithm for specified frames.
     Author: Jernej Vivod (vivod.jernej@gmail.com)
@@ -64,6 +44,7 @@ def iterative_lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False
         (tuple): tuple of matrices of changes in spatial
         coordinates for each pixel.
     """
+
 
     # Compute gaussian pyramids from the two frames.
     gaussian_pyramid_im1 = gaussian_pyramid(im1)
@@ -100,7 +81,7 @@ def iterative_lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False
             im2_nxt_warped = warp_image(im2_nxt, u_upsampled, v_upsampled)
 
             # Estimate residual flow using Lucas-Kanade method.
-            u_res, v_res = lucas_kanade(im1_nxt, im2_nxt_warped, n=n)
+            u_res, v_res = lucas_kanade(im1_nxt, im2_nxt_warped, n=n, sigma1=sigma1, derivative_smoothing=derivative_smoothing, sigma2=sigma2)
 
             # Add upsampled flow and residual flow to get flow on current level.
             u_fin = u_upsampled + u_res

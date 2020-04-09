@@ -3,7 +3,8 @@ import cv2
 import matplotlib.pyplot as plt
 import imageio
 
-from ex1_utils import gausssmooth
+from ex1_utils import gausssmooth, show_flow
+from horn_schunck import horn_schunck
 from lucas_kanade import lucas_kanade
 
 
@@ -21,13 +22,13 @@ def superimpose_field(u, v, img):
     """
     
     # Set scaling.
-    scaling = 0.1
+    scaling = 0.11
     u = cv2.resize(gausssmooth(u, 1.5), (0, 0), fx=scaling, fy=scaling)
     v = cv2.resize(gausssmooth(v, 1.5), (0, 0), fx=scaling, fy=scaling)
     
     # Normalize magnitudes.
-    u = u / np.sqrt(u**2 + v**2);
-    v = v / np.sqrt(u**2 + v**2);
+    # u = u / np.sqrt(u**2 + v**2);
+    # v = v / np.sqrt(u**2 + v**2);
     
     # Create plot.
     x_ = (np.array(list(range(1, u.shape[1] + 1))) - 0.5) / scaling
@@ -36,7 +37,7 @@ def superimpose_field(u, v, img):
     fig = plt.figure()
     ax = plt.gca()
     ax.axis('off')
-    ax.quiver(x, y, u, v, color='r')
+    ax.quiver(x, y, u, -v, color='r', scale=30)
     ax.imshow(img)
     fig.canvas.draw()
     plt.close()
@@ -78,13 +79,14 @@ def visualize_flow(src, flow_comp_func):
     
     # Set frame counter.
     count = 0
-    FRAME_LIM = 100
+    FRAME_LIM = 200
     
     # While there is video and while below frame index limit.
     while video_capture.isOpened() and count < FRAME_LIM:
 
         # Increment frame count.
         count += 1
+        print("Processing frame {0}/{1}".format(count, FRAME_LIM))
 
         # Get next frame.
         ret, frame = video_capture.read()
@@ -106,6 +108,18 @@ def visualize_flow(src, flow_comp_func):
                 # Compute flow using current frame and frame
                 # in previous buffer.
                 u, v = flow_comp_func(prev.astype(float)/255.0, frame_gray.astype(float)/255.0)
+                
+
+                ### TODO - remove ###
+                # import pdb
+                # pdb.set_trace()
+                # fig2, ((ax2_11, ax2_12), (ax2_21, ax2_22)) = plt.subplots(2, 2)
+                # ax2_11.imshow(prev)
+                # ax2_12.imshow(frame_gray)
+                # show_flow(u, v, ax2_21, type='angle')
+                # show_flow(u, v, ax2_22, type='field', set_aspect=True)
+                # fig2.suptitle('Horn−Schunck Optical Flow')
+                ######
 
                 # Add optical flow visualization to image in prev buffer.
                 vis_nxt = superimpose_field(u, v, prev_original)
@@ -123,10 +137,11 @@ def visualize_flow(src, flow_comp_func):
     video_capture.release()
 
     # Create gif file from images.
-    imageio.mimsave('test.gif', res)
+    imageio.mimsave('roundabout_hs.gif', res)
 
 
 ### TEST ###
 if __name__ == '__main__':
-    visualize_flow('../data/chaplin.mp4', lambda im1, im2: lucas_kanade(im1, im2, n=2))
+    visualize_flow('../data/roundabout.mp4', lambda im1, im2: horn_schunck(im1, im2, sigma1=1.0, n_iters=100, lmbd=0.5, derivative_smoothing=True, sigma2=1.0))
+    # visualize_flow('../data/roundabout.mp4', lambda im1, im2: lucas_kanade(im1, im2, 3, derivative_smoothing=True))
 

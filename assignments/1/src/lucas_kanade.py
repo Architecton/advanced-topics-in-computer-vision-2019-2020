@@ -2,7 +2,7 @@ import numpy as np
 from ex1_utils import gaussderiv, gausssmooth
 import cv2
 
-def lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False, sigma2=0.15):
+def lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False, sigma2=1.0):
     """
     Compute the Lucas-Kanade optical flow estimation.
     Author: Jernej Vivod (vivod.jernej@gmail.com)
@@ -35,7 +35,7 @@ def lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False, sigma2=0
         im_df_dx_t2, im_df_dy_t2 = gaussderiv(im2, sigma=sigma1)
         im_df_dx = 0.5*(im_df_dx_t1 + im_df_dx_t2)
         im_df_dy = 0.5*(im_df_dy_t1 + im_df_dy_t2)
-        im_df_dt = gausssmooth(im_df_dt, sigma2)
+        im_df_dt = gausssmooth(im2, sigma2) - gausssmooth(im1, sigma2)
     else:
         im_df_dx = im_df_dx_t1
         im_df_dy = im_df_dy_t1
@@ -56,7 +56,7 @@ def lucas_kanade(im1, im2, n=3, sigma1=1.0, derivative_smoothing=False, sigma2=0
 
     # Set minimum determinant value and get indices of pixels where
     # determinant above set threshold.
-    DET_THRESH = 0.0 # 1e-4
+    DET_THRESH = 1e-5
     det_idx = np.abs(det) > DET_THRESH
     
     # Compute the approximated changes in spatial coordinates.
