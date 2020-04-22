@@ -1,0 +1,11 @@
+mosse_tracker:
+  tracker_path: ../src/mosse_tracker.py
+  class_name: MosseTracker
+
+ncc_tracker:
+  tracker_path: ../src/ncc_tracker.py
+  class_name: NCCTracker
+
+ms_tracker:
+  tracker_path: ../src/ms_tracker.py
+  class_name: MeanShiftTracker

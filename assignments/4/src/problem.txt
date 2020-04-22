@@ -1,0 +1,2 @@
+The system covariance matrix Q has two near identically pointed eigenvectors for non-zero eigenvalues.
+This means that the gaussian is long but very, very thin - resembles a line.
